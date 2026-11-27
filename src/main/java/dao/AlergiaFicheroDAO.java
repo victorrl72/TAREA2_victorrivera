@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -26,22 +27,38 @@ public class AlergiaFicheroDAO {
 	public List<Alergia> listarTodas() {
 		List<Alergia> lista = new ArrayList<>();
 		File dir = new File(CARPETA_ALERGIAS);
-		File[] ficheros = dir.listFiles((d, name) -> name.endsWith(".dat"));
+		File[] ficheros = dir.listFiles();
 
 		if (ficheros != null) {
 			for (File f : ficheros) {
-				try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
-					Object obj = ois.readObject();
-					if (obj instanceof Alergia alergia) {
-						lista.add(alergia);
+				if (f.isFile() && f.getName().endsWith(".dat")) {
+					ObjectInputStream ois = null;
+					try {
+						ois = new ObjectInputStream(new FileInputStream(f));
+						Object obj = ois.readObject();
+						if (obj instanceof Alergia) {
+							lista.add((Alergia) obj);
+						}
+					} catch (IOException | ClassNotFoundException e) {
+						System.out.println("Error al leer fichero " + f.getName() + ": " + e.getMessage());
+					} finally {
+						try {
+							if (ois != null) ois.close();
+						} catch (IOException e) {
+							System.out.println("Error al cerrar fichero: " + e.getMessage());
+						}
 					}
-				} catch (IOException | ClassNotFoundException e) {
-					System.err.println("Error al leer fichero " + f.getName() + ": " + e.getMessage());
 				}
 			}
 		}
 
-		lista.sort(Comparator.comparingLong(Alergia::getIdAlergia));
+		Collections.sort(lista, new Comparator<Alergia>() {
+			@Override
+			public int compare(Alergia a1, Alergia a2) {
+				return Long.compare(a1.getIdAlergia(), a2.getIdAlergia());
+			}
+		});
+
 		return lista;
 	}
 
@@ -50,13 +67,21 @@ public class AlergiaFicheroDAO {
 		if (!f.exists()) {
 			return null;
 		}
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(f));
 			Object obj = ois.readObject();
-			if (obj instanceof Alergia alergia) {
-				return alergia;
+			if (obj instanceof Alergia) {
+				return (Alergia) obj;
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			System.err.println("Error al leer alergia " + idAlergia + ": " + e.getMessage());
+			System.out.println("Error al leer alergia " + idAlergia + ": " + e.getMessage());
+		} finally {
+			try {
+				if (ois != null) ois.close();
+			} catch (IOException e) {
+				System.out.println("Error al cerrar fichero: " + e.getMessage());
+			}
 		}
 		return null;
 	}
@@ -78,12 +103,20 @@ public class AlergiaFicheroDAO {
 			dir.mkdirs();
 		}
 		File f = new File(dir, "alergia_" + alergia.getIdAlergia() + ".dat");
-		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f))) {
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream(new FileOutputStream(f));
 			oos.writeObject(alergia);
 			return true;
 		} catch (IOException e) {
-			System.err.println("Error al guardar alergia: " + e.getMessage());
+			System.out.println("Error al guardar alergia: " + e.getMessage());
 			return false;
+		} finally {
+			try {
+				if (oos != null) oos.close();
+			} catch (IOException e) {
+				System.out.println("Error al cerrar fichero: " + e.getMessage());
+			}
 		}
 	}
 }
