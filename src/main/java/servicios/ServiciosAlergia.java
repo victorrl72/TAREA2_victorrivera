@@ -47,6 +47,27 @@ public class ServiciosAlergia {
 		}
 		return null;
 	}
+	
+	public String editarAlergia(Alergia alergia) {
+		if (alergia == null || alergia.getIdAlergia() == null) {
+			return "Alergia no valida.";
+		}
+		if (estaVacio(alergia.getNombre())) {
+			return "El nombre de la alergia no puede estar vacio.";
+		}
+		if (alergia.getMedicamento() != null) {
+			if (estaVacio(alergia.getMedicamento().getNombre()) || estaVacio(alergia.getMedicamento().getPrincipio())) {
+				return "El nombre y principio activo del medicamento no pueden estar vacios.";
+			}
+			if (alergia.getMedicamento().getDosis() <= 0) {
+				return "La dosis maxima debe ser mayor que 0.";
+			}
+		}
+		if (!alergiaDAO.guardar(alergia)) {
+			return "Error al actualizar la alergia en el fichero.";
+		}
+		return null;
+	}
 
 	private boolean estaVacio(String texto) {
 		return texto == null || texto.trim().isEmpty();
