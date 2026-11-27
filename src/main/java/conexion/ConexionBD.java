@@ -12,7 +12,7 @@ public class ConexionBD {
     private static Connection conexion = null;
     private static final Properties props = new Properties();
 
-    // SE CARGA EL APPLICATIO PROPERTIES UNA VEZ AL ARRANCAR
+    // se carga el aplicatio properties una vez al arrancar
     static {
         try (InputStream is = ConexionBD.class.getClassLoader().getResourceAsStream("application.properties")) {
             if (is == null) {
@@ -59,8 +59,5 @@ public class ConexionBD {
         return props.getProperty(clave);
     }
     
-    public static void main(String[] args) {
-        System.out.println(getConexion() != null ? "Conectado OK" : "Fallo");
-        cerrarConexion();
-    }
+  
 }
